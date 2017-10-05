@@ -1,0 +1,125 @@
+---
+title: "formative.rmd"
+author: "Eddie LIN"
+date: "10/5/2017"
+output: html_document
+---
+
+
+1. Download the MITx/Harvardx MOOC dataset.
+```{r}
+# Done. 
+```
+
+2. Fork and clone this repository to your computer and open it as a new project in RStudio
+```{r}
+# Done.
+```
+
+3. Open a new R Markdown file and save it to the repository with the filename formative.rmd. Inlcude all your code in the markdown document.
+```{r}
+# Done.
+```
+
+4. Upload the MITx/Harvardx dataset to R as a dataframe named D1(Please inlcude your code in your markdown document)
+```{r}
+D1 <- as.data.frame(read.csv("HMXPC13_DI_v2_5-14-14.csv"), stringAsFacotrs = FALSE)
+
+```
+
+5. What does the DI suffix that is appeneded to two of the variable names mean?
+```{r}
+str(D1)
+# I don't really understand the question
+```
+
+6. How many people enrolled in HarvardX/CS50x recieved certification in 2012? (Please inlcude your code in your markdown document)
+```{r}
+library(dplyr)
+library(tidyr)
+library(stringr)
+```
+```{r}
+D1.new <- D1[, c("course_id", "certified")]
+DF.final<- D1.new %>% filter(str_detect(course_id, "HarvardX/CS50x")) %>% filter(str_detect(certified, "1"))
+nrow(DF.final)
+```
+
+7. How many people registered for HarvardX/CS50x from Columbia on October 15, 2012? (Please inlcude your code in your markdown document)
+```{r}
+users <- as.character(D1$course_id)
+new_users <- t(as.data.frame(strsplit(users,'/')))
+new_users_class <- new_users[ , 2]
+class <- as.character(new_users_class)
+#class(class)
+
+```
+
+```{r}
+start.date <- D1[, "start_time_DI"]
+start.date <- t((start.date))
+start.date <- as.character(start.date)
+class(start.date)
+```
+
+```{r}
+new_df <- data.frame(cbind(class, start.date))
+new_df$class <- as.character(new_df$class)
+new_df$start.date <- as.character(new_df$start.date)
+```
+
+
+```{r}
+library(stringr)
+
+new_df %>% filter(str_detect(class, "CS50x")) %>% filter(str_detect(start.date, "2012-10-05"))
+nrow(new_df)
+```
+
+
+8. Create a new data frame (D2) that includes student ID and registration date for all students from a country of your choice (Please inlcude your code in your markdown document)
+```{r}
+# as I can't tell from the columns that who is from Columbia, I assume the whole dataset is populated by Columbia students' data
+D2 <- D1[ , c("userid_DI","start_time_DI", "final_cc_cname_DI" )]
+D2_Mexico <- D2 %>% filter(str_detect(final_cc_cname_DI, "Mexico")) 
+```
+
+9. Create a new data frame (D3) in which the column names are the registration dates, with one column containing the student ids and all other cells indicating a 1 if the student registered on that date or an NA if they did not (hint: you will need to create a new variable before you change the structure of your data frame)
+```{r}
+D3 <- D1[ , c("start_time_DI", "userid_DI", "registered")]
+D3$registered <- as.character(D3$registered)
+#register <- c(rep(NA, nrow(D3)))
+#D3 <- data.frame(D3, register)
+tag.D3 <- 0:1
+names(tag.D3) <- c('NA', '1')
+D3 <-  D3 %>% mutate(register.status = tag.D3[registered])
+
+```
+
+10. Now make the row names of D3 the student ids on your new data frame and remove the user id column from your data frame
+```{r}
+# well, since row names can not be duplicate, I have to remove the start_time_DI first before applying disctint()
+
+D3 <- D3[ , c("userid_DI", "register.status")]
+D3 <- distinct(D3)
+row.names(D3) <- D3$userid_DI
+D3 <- D3 %>% select(-userid_DI)
+```
+
+
+11. Convert your data frame to a matrix (M1)
+```{r}
+M1 <- as.matrix(D3)
+```
+
+12. Create a new matrix which is the transposed version of your matrix (M2)
+```{r}
+M2 <- t(M1)
+```
+
+13. Create a third matrix (M3) that is a student by student matrix where the cells in the matrix represent if two studentes registered on the same day (This will take a lot of processing power, you may not be able to complete it if you have a large number of students)
+```{r}
+M3 <- M1 %*% M2 # not finish it yet
+```
+
+14. Convert the diagonal of your matrix into NAs
