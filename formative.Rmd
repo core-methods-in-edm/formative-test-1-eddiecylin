@@ -1,6 +1,6 @@
 ---
 title: "formative.rmd"
-author: "Eddie LIN"
+author: "Eddie LIN "
 date: "10/5/2017"
 output: html_document
 ---
