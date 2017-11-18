@@ -1,0 +1,113 @@
+---
+title: "Formative Test 1 - Q-Matrix - Eddie Lin"
+author: "Charles Lang"
+date: "11/9/2017"
+output: html_document
+---
+In the following excercise you will be creating a Q-Matrix for the formative test and then calculating the error for your Q-matrix by comparing it the real class data.
+
+1. Start by building your own Q-Matrix from the questions on the formative test. You need to define a set of concepts and then decide which concepts are required for each question. Create a matrix in R that displays your Q-Matrix.
+```{r}
+DF1 <- read.csv("Q-matrix-formative1-eddie.csv", header = TRUE)
+DF1[ , 1] <- NULL
+rownames(DF1) <- c("q1","q2","q3","q4","q5","q6","q7","q8","q9","q10","q11","q12","q13","q14")
+colnames(DF1) <- c("c1","c2","c3","c4")
+DF1 <- as.matrix(DF1)
+
+```
+
+
+2. Define all possible concept states for your Q-Matrix. A concept state is the possible combinations of concepts represented by 1 and 0. For example, if there are two concepts the possible concept states would be `00`, `01`, `10` and `11`.
+```{r}
+library(dplyr)
+# I defined 4 different concepts, therefore, there should be 16 different concept combinitions (2**4)
+concept.state <- expand.grid(c(0,1),c(0,1),c(0,1),c(0,1))
+# it is my first time to use `expand.grid`, to dummy proof it, I will run unique() and check the total of row (should be 16)
+concept.state <- unique(concept.state)
+paste("the total unique rows should be 16, and the result is ...... ", nrow(concept.state)) # great!'
+
+concept.state <- as.matrix(concept.state)
+colnames(concept.state) <- c("c1", "c2", "c3", "c4")
+```
+
+3. Generate the Ideal Response Vectors for each concept state. The Ideal Response Vector would be the pattern of answers you would expect a student to give for each concept state. Can you do this in code (not manually)? Store these as individual vectors.
+```{r}
+empty.df <- data.frame(matrix( , nrow = 16, ncol = 14))
+names(empty.df) <- (c("q1", "q2", "q3", "q4","q5", "q6","q7", "q8","q9", "q10","q11", "q12","q13", "q14"))
+
+DF2 <- data.frame(cbind(concept.state, empty.df))
+# plug in IRV for all 14 questions
+DF2$q1 <- DF2$c1
+DF2$q2 <- DF2$c1
+DF2$q3 <- DF2$c1
+DF2$q4 <- DF2$c1
+DF2$q5 <- 1
+DF2$q6 <- DF2$c1
+DF2$q7 <- as.numeric(DF2$c1 & DF2$c2)
+DF2$q8 <- as.numeric(DF2$c1 & DF2$c2)
+DF2$q9 <- as.numeric(DF2$c1 & DF2$c2 & DF2$c3)
+DF2$q10 <- as.numeric(DF2$c1 & DF2$c2)
+DF2$q11 <- DF2$c1
+DF2$q12 <- as.numeric(DF2$c1 & DF2$c2)
+DF2$q13 <- as.numeric(DF2$c1 & DF2$c2)
+DF2$q14 <- as.numeric(DF2$c1 & DF2$c2)
+IRV <- DF2[ , 5:18] # here is my IRV 
+```
+
+4. Now upload the class answer data and convert it to 1s and 0s. Each row of the class data is a response vector. How many unique response vectors are there in the class data? How many Ideal Response Vectors did you generate in the previous step?
+```{r}
+class.answer <- read.csv("formative1-results-DI.csv", header = TRUE)
+class.answer[ , 1:2] <- NULL
+class.answer <- ifelse(class.answer == "Yes", 1, 0)
+class.answer <- unique(class.answer)
+paste("there are ", nrow(class.answer), " unique vectors in the class data and ", nrow(IRV), "Ideal Response Vectors")
+
+
+```
+
+5. Compare each response vector to the Ideal Response Vectors using Hamming Distance (the number of differing elements in each vector). You will need to install the `e1071` package and use the code `hamming.distance()`. 
+```{r}
+install.packages("e1071")
+library(e1071)
+# I feel this question is the same as next question?
+
+```
+
+6. Match each response vector to the Ideal Response Vector for which there is the lowest Hamming Distance.
+```{r}
+
+vector <- c()
+for(i in 1:nrow(IRV)){
+        row_sum <- sum(apply(class.answer,1,function(x) x!=IRV[i,]))
+        vector <- as.vector(c(vector,row_sum))
+}
+
+names(vector) <- c(1:16)
+min.value <- min(vector)
+print(min.value) # min value = 81, occuring in the 12th concept state
+vector 
+
+
+```
+
+7. For each response vector multiply this lowest Hamming Distance by the number of students that answered with that response vector and sum all these values together. This is the error score for your Q-Matrix.
+```{r}
+# I will loop all students responses into the IRV vector and sum their error scores 
+IDR <- IRV[12, ]
+
+# find original student response vectors (before applying unique())
+student.response.vectors <- read.csv("formative1-results-DI.csv", header = TRUE)
+student.response.vectors[ , 1:2] <- NULL
+student.response.vectors <- ifelse(student.response.vectors == "Yes", 1, 0)
+
+total.error.score <- sum(apply(student.response.vectors, 1, function(x) x!=IDR))
+paste("the total error score of my Q-Matrix is: ", total.error.score)
+
+```
+
+8. What change could you make to your Q-Matrix to attempt to lower its error score?
+
+```{r}
+# Thanks for the hints during our conversation before the class, Charles. You helped confirm my idea. I think that if we have fewer concept states then the total error score shoule be logically lower since there will be fewer combinitions of Ideal Response Vectors.
+```
+
